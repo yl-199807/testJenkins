@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="010f4660-f37d-4673-8c10-3d1794548902" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="1ussCBRz1PZLvLlNgNbTNGcTZ4k" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../demo_20210120/src/kaikeba_demo_20210216_yuanshengJS" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="prettierjs.PrettierConfiguration.Package" value="D:\workspace\Cesium-1.83\node_modules\prettier" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\workspace\Cesium-1.83\Source\Assets\Images" />
+    </key>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="010f4660-f37d-4673-8c10-3d1794548902" name="Default Changelist" comment="" />
+      <created>1625465500946</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1625465500946</updated>
+      <workItem from="1625465502441" duration="40815000" />
+      <workItem from="1625708541981" duration="502000" />
+      <workItem from="1625709869623" duration="228000" />
+      <workItem from="1625710526248" duration="816000" />
+      <workItem from="1625712942599" duration="1125000" />
+      <workItem from="1625714955126" duration="124000" />
+      <workItem from="1625715289425" duration="66000" />
+      <workItem from="1625715454789" duration="8189000" />
+      <workItem from="1626169145182" duration="234000" />
+      <workItem from="1626413309815" duration="33000" />
+      <workItem from="1626682707010" duration="238000" />
+      <workItem from="1626744404750" duration="30000" />
+      <workItem from="1626852384458" duration="125000" />
+      <workItem from="1626935442027" duration="25000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="501" y="185" key="FileChooserDialogImpl" timestamp="1626169356841">
+      <screen x="0" y="0" width="1440" height="860" />
+    </state>
+    <state x="501" y="185" key="FileChooserDialogImpl/0.0.1440.860/-1920.0.1920.1040@0.0.1440.860" timestamp="1626169356841" />
+    <state x="222" y="72" key="SettingsEditor" timestamp="1625550604789">
+      <screen x="0" y="0" width="1440" height="860" />
+    </state>
+    <state x="222" y="72" key="SettingsEditor/0.0.1440.860/-1920.0.1920.1040@0.0.1440.860" timestamp="1625550604789" />
+    <state x="401" y="162" width="637" height="534" key="find.popup" timestamp="1625643528930">
+      <screen x="0" y="0" width="1440" height="860" />
+    </state>
+    <state x="401" y="162" width="637" height="534" key="find.popup/0.0.1440.860/-1920.0.1920.1040@0.0.1440.860" timestamp="1625643528930" />
+  </component>
+</project>

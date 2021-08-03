@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Use correct character set. -->
+    <meta charset="utf-8"/>
+    <!-- Tell IE to use the latest, best version. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Hello World!</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        @import url(../Build/Cesium/Widgets/widgets.css);
+
+        html,
+        body,
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+
+<div class="menu" onclick="addPoint()">新增节点</div>
+<script>
+    /**
+     * 创建viewer
+     */
+    var viewer = new Cesium.Viewer("cesiumContainer", {
+        // 可通过配置参数添加/移除相关组件
+        // Viewer的完整配置，请查看：https://cesiumjs.org/Cesium/Build/Documentation/Viewer.html。
+        scene3DOnly: true,                //SceneModePicker : 切换2D、3D 和 Columbus View (CV) 模式。
+        selectionIndicator: false,
+        baseLayerPicker: false            //BaseLayerPicker : 选择三维数字地球的底图（imagery and terrain）
+    });
+
+    // 创建handler用于pick选择事件
+    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+    // Enable lighting based on sun/moon positions 激活基于太阳位置的光照
+    viewer.scene.globe.enableLighting = true;
+
+    //去除版权信息
+    viewer._cesiumWidget._creditContainer.style.display = "none";
+
+    /*
+      设置定位区域
+      - Cartesian3 : 一个三维笛卡尔坐标——当它被用作相对于地球中心的位置时，使用地球固定框架（ECEF）。
+      - HeadingPitchRoll : 在东北向上的框架中关于局部轴的旋转（弧度）。航向是围绕负Z轴的旋转。俯仰是围绕负Y轴的旋转。滚动是关于正X轴的旋转。
+     */
+    // Cesium.Cartesian3.fromDegrees(longitude, latitude, height, ellipsoid, result)
+    var initialPosition = new Cesium.Cartesian3.fromDegrees(-73.998114468289017509, 40.674512895646692812, 1002631.082799425431);      // 传入经纬度，以笛卡尔存
+    var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(7.1077496389876024807, -31.987223091598949054, 0.025883251314954971306);
+    var homeCameraView = {         //setView函数的参数
+        destination: initialPosition,
+        orientation: {             // 角度
+            heading: initialOrientation.heading,
+            pitch: initialOrientation.pitch,
+            roll: initialOrientation.roll
+        }
+    };
+
+    viewer.scene.camera.setView(homeCameraView);
+
+    /**
+     *  添加一些摄影机飞行动画选项，及 替代默认的主页按钮
+     */
+    // Add some camera flight animation options
+    homeCameraView.duration = 2.0;
+    homeCameraView.maximumHeight = 2000;
+    homeCameraView.pitchAdjustHeight = 2000;
+    homeCameraView.endTransform = Cesium.Matrix4.IDENTITY;
+    // Override the default home button 替代默认的主页按钮，不返回大地球
+    // viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function (e) {
+    //     e.cancel = true;
+    //     viewer.scene.camera.flyTo(homeCameraView);
+    // });
+
+    /*
+      控制scene的时间进度
+     */
+    // Set up clock and timeline.
+    // viewer.clock.shouldAnimate = true; // make the animation play when the viewer starts
+    // viewer.clock.startTime = Cesium.JulianDate.fromIso8601("2017-07-11T16:00:00Z");
+    // viewer.clock.stopTime = Cesium.JulianDate.fromIso8601("2017-07-11T16:20:00Z");
+    // viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2017-07-11T16:00:00Z");
+    // viewer.clock.multiplier = 10; // sets a speedup
+    // viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER; // tick computation mode
+    // viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; // loop at the end
+    // viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime); // set visible range
+
+    /**
+     * entities实现hover经纬度显示
+     * entities的options除了label,position,point还有id、name、availability、show、description、orientation、viewFrom、parent等
+     * 官方文档：https://cesium.com/learn/cesiumjs/ref-doc/Entity.html?classFilter=entity
+     */
+        // 添加跟随经纬度标签
+    var entity = viewer.entities.add({      //entity通过viewer中的entities加载到场景中
+            // 设置标签样式（颜色、透明度、纹理贴图、更高级的光照等）
+            // 设置样式还包括Brightness, contrast, hue色温, saturation饱和度, Gamma灰度 	
+            label: {
+                show: false,
+                showBackground: true,
+                font: "18px monospace",
+                horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+                verticalOrigin: Cesium.VerticalOrigin.TOP,
+                pixelOffset: new Cesium.Cartesian2(15, 0),
+            }
+        });
+    /*
+        添加跟随事件，跟随鼠标显示经纬度
+    */
+    handler.setInputAction(function (movement) {
+        // pickEllipsoid在加载地形的情况下有一定误差，地形凹凸程度越大，误差越大。
+        // pickPosition在depthTestAgainstTerrain=false时只能在3DTile上获取准确位置，当depthTestAgainstTerrain=true时，在3DTile和底图上均能获取准确位置
+        var cartesian = viewer.camera.pickEllipsoid(    //cartesian是转完的结果,一个对象，包含xyz三个属性坐标
+            movement.endPosition,               // 窗口位置
+            viewer.scene.globe.ellipsoid        // 要选择的球体
+        );
+
+        if (cartesian) {
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);    //转84坐标系（世界坐标）
+            var longitudeString = Cesium.Math.toDegrees(
+                cartographic.longitude
+            ).toFixed(2);       //.toFixed(2)截取小数点后两位
+            var latitudeString = Cesium.Math.toDegrees(
+                cartographic.latitude
+            ).toFixed(2);
+
+            // console.log("longitudeString: "+longitudeString , "latitudeString: "+latitudeString);
+
+            entity.position = cartesian;
+            entity.label.show = true;
+            // 纬度latitude(南纬是负) ，经度longitude(西经是负) ，\u00B0度符号
+            entity.label.text =
+                "Lon: " +
+                ("   " + longitudeString).slice(-7) +
+                "\u00B0" +
+                "\nLat: " +
+                ("   " + latitudeString).slice(-7) +
+                "\u00B0";
+        } else {
+            entity.label.show = false;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    /*
+      在地球上绘制一个点
+     */
+    viewer.entities.add({
+        id: 'point_id',          //用于绑定事件
+        position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        point: {
+            pixelSize: 10,
+            color: Cesium.Color.YELLOW
+        }
+    });
+    console.log(Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883));
+
+
+    /*
+      在地球上绘制一个半透明的红色椭圆
+     */
+    viewer.entities.add({
+        id: 'ellipse_id',       // 用于事件识别
+        position: Cesium.Cartesian3.fromDegrees(103.0, 40.0),
+        name: 'Red ellipse on surface with outline',
+        ellipse: {      // 椭圆
+            semiMinorAxis: 250000.0,
+            semiMajorAxis: 400000.0,      //长半轴
+            // 样式通过材质来设置，设置material为Cesium.Color.RED.withAlpha(0.5)透明度为0.5的红色
+            material: Cesium.Color.RED.withAlpha(0.5),
+        }
+    });
+
+    /*
+      绘制填充和边框
+     */
+    viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(53.0, 40.0),
+        ellipse: {
+            semiMinorAxis: 500000.0,
+            semiMajorAxis: 500000.0,
+            height: 2000000.0,
+            fill: true,
+            // **垂直拉伸 **
+            extrudedHeight: 400000.0,     //将面在垂直方向进行拉伸形成体，形成的体积仍然符合它拉伸面的地球曲率
+            material: Cesium.Color.PURPLE.withAlpha(0.5),        // 填充样式
+            outline: true, //必须设置height，否则ouline无法显示
+            outlineColor: Cesium.Color.BLUE.withAlpha(0.5),    // 边框的颜色
+            // outlineWidth:20.0//边框的宽度, windows系统下不能设置，固定为1
+        }
+    });
+
+    /*
+      贴图
+     */
+    viewer.entities.add({
+        id: 'tietu_id',
+        position: Cesium.Cartesian3.fromDegrees(83.0, 40.0),
+        name: 'Red ellipse on surface with outline',
+        ellipse: {
+            semiMinorAxis: 550000.0,
+            semiMajorAxis: 800000.0,
+            height: 200000.0,
+            fill: true,
+            material: "../Source/Assets/Images/tietu.jpg",
+            outline: true, //必须设置height，否则ouline无法显示
+            outlineColor: Cesium.Color.BLUE.withAlpha(0.5),
+        },
+        userData: {}
+    });
+
+    /**
+     * pick
+     * 在多数应用场景中，我们不仅需要绘制出空间对象还需要用鼠标拾取对象
+     * 交互，pick用于高亮
+     */
+    // // 如果鼠标位于兴趣的点上，请更改实体公告牌的比例和颜色
+    // var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    // handler.setInputAction(function(movement) {}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    //
+    // handler.setInputAction(function(movement) {
+    //   var pickedPrimitive = viewer.scene.pick(movement.endPosition);
+    //   var pickedEntity = (Cesium.defined(pickedPrimitive)) ? pickedPrimitive.id : undefined;
+    //   // Highlight the currently picked entity
+    //   if (Cesium.defined(pickedEntity) && Cesium.defined(pickedEntity.billboard)) {
+    //     pickedEntity.billboard.scale = 2.0;
+    //     pickedEntity.billboard.color = Cesium.Color.ORANGERED;
+    //   }
+    // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+    /*
+        pick事件，单击触发
+    */
+    let divEle = document.querySelector(".menu");
+    let status_click = false;
+    handler.setInputAction(function (movement) {    //setInputAction绑定鼠标事件, 传入回调和事件
+        var pick = viewer.scene.pick(movement.position);
+        // console.log(pick)
+        if (Cesium.defined(pick) && (pick.id.id === 'point_id')) {
+            alert('picked! 我是点');
+        }
+        if (Cesium.defined(pick) && (pick.id.id === 'tietu_id')) {
+            alert('picked! 我是贴图');
+        }
+        if (Cesium.defined(pick) && (pick.id.id === 'ellipse_id')) {
+            alert('picked! 我是半透明的红色椭圆');
+        }
+        divEle.style.display = "none";
+
+        console.log(movement.position)
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);           // 事件不能冲突
+
+    /**
+     * 右击新建节点
+     */
+    // 取消原生右击事件
+    // handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    handler.setInputAction(function (movement) {    //setInputAction绑定鼠标事件, 传入回调和事件
+        // let pick = viewer.scene.pick(movement.position);
+        let cartesian_pick = viewer.camera.pickEllipsoid(    //cartesian是转完的结果,一个对象，包含xyz三个属性坐标
+            movement.position,               // 窗口位置
+            viewer.scene.globe.ellipsoid        // 要选择的球体
+        );
+        viewer.entities.add({
+            position: cartesian_pick,
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.BLUE
+            }
+        });
+    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);           // 事件不能冲突
+
+    handler.setInputAction(function (movement) {    //setInputAction绑定鼠标事件, 传入回调和事件
+        window.oncontextmenu = function (e) {
+            //取消默认的浏览器自带右键 很重要！！
+            e.preventDefault();
+        };
+
+        divEle.style.left = movement.position.x.toFixed(0) + "px";
+        divEle.style.top = movement.position.y.toFixed(0) + "px";
+        divEle.style.display = "block";
+    }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+    function addPoint() {
+        // status_click = true;
+        divEle.style.display = "none";
+
+            let cartesian_pick = viewer.camera.pickEllipsoid(    //cartesian是转完的结果,一个对象，包含xyz三个属性坐标
+                {x:this.offsetX},               // 窗口位置
+                viewer.scene.globe.ellipsoid        // 要选择的球体
+            );
+            viewer.entities.add({
+                position: cartesian_pick,
+                point: {
+                    pixelSize: 10,
+                    color: Cesium.Color.BLUE
+                }
+            });
+            status_click = false;
+
+    }
+</script>
+</body>
+<style>
+    .menu {
+        display: none;
+        position: fixed;
+        background-color: white;
+        width: 70px;
+        line-height: 20px;
+        font-size: small;
+        text-align: center;
+        border-radius: 10%;
+    }
+    .menu:hover{
+        background-color: #aeb9b7;
+    }
+</style>
+</html>
